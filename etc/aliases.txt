@@ -1,0 +1,3 @@
+
+# Aliases for UNNAMED
+alias ueeditor="source ~/ws/sim/UnrealEngine/Engine/Binaries/Linux/UE4Editor"
