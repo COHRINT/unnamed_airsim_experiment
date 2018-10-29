@@ -35,6 +35,7 @@ def drone_teleop():
     client = airsim.MultirotorClient()
     client.confirmConnection()
     client.enableApiControl(True, "Drone1")
+    client.enableApiControl(True, "Drone2")
     client.armDisarm(True)
     # Async methods returns Future. Call join() to wait for task to complete.
     # client.takeoffAsync().join()

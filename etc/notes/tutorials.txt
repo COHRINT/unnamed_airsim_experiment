@@ -9,3 +9,5 @@ Video Stream:
 Multi Vehicle: https://github.com/Microsoft/AirSim/blob/master/docs/multi_vehicle.md
 
 Road Map of the Neighborhood AND DL models for car: https://github.com/Microsoft/AutonomousDrivingCookbook
+
+Image Publish/Subscribe: http://wiki.ros.org/rospy_tutorials/Tutorials/WritingImagePublisherSubscriber#Python_Code
