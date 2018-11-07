@@ -68,11 +68,15 @@ class AirsimDrone():
     #         # yield (b'--frame\r\n'
     #         #        b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n')
     #
-    def moveToPosition(self, pos_msg=""):
-        self.client.enableApiControl(True, name)
-        self.client.armDisarm(True, name)
+    def moveToPosition(self, pos_msg, cur_pos=False):
+        self.client.enableApiControl(True, self.name)
+        self.client.armDisarm(True, self.name)
+        vx, vy, vz = droneTwist.linear.x, droneTwist.linear.y, droneTwist.linear.z
         speed = 1 # vel.x + vel.y + vel.z^2 blah
-        return self.client.moveToPositionAsync(0, 0, 0, speed, vehicle_name=name)
+        if (cur_pos):
+            return self.client.moveToPositionAsync(0, 0, 0, speed, vehicle_name=self.name)
+        else:
+            return self.client.moveByVelocityAsync(vx, vy, vz, 1, self.name)
 
 class AirSimCar():
     def __init__(self):

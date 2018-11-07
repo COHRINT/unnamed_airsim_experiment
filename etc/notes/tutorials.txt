@@ -11,3 +11,9 @@ Multi Vehicle: https://github.com/Microsoft/AirSim/blob/master/docs/multi_vehicl
 Road Map of the Neighborhood AND DL models for car: https://github.com/Microsoft/AutonomousDrivingCookbook
 
 Image Publish/Subscribe: http://wiki.ros.org/rospy_tutorials/Tutorials/WritingImagePublisherSubscriber#Python_Code
+
+
+Headless mode/speeding up Images
+ - https://github.com/Microsoft/AirSim/pull/850
+ - https://github.com/Microsoft/AirSim/issues/796
+ - https://answers.unrealengine.com/questions/796724/how-to-speed-up-the-engine-for-reinforcement-learn.html

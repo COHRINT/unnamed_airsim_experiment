@@ -19,17 +19,21 @@ def main():
 
     # setup ROS node
     rospy.init_node('airsim_bridge')
-    rospy.Subscriber("/%s/cmd_vel" % settings["drone_name"], Twist, droneTwistCallback)
+    rospy.Subscriber("/%s/cmd_vel" % settings["drone_name"], Twist, droneTwistCallback)# use lambda function instead of callback
 
     # setup vehicles
     drone = airsim_objects.AirsimDrone("Drone1")
     # car = airsim_objects.AirSimCar("Car1")
     drone.beginMovement().join()
+    droneTwist.linear.x = 0; droneTwist.linear.y = 0; droneTwist.linear.z = 0
+    droneTwist.angular.x = 0; droneTwist.angular.y = 0; droneTwist.angular.z = 0
+    carTwist.linear.x = 0; carTwist.linear.y = 0; carTwist.linear.z = 0
+    carTwist.angular.x = 0; carTwist.angular.y = 0; carTwist.angular.z = 0
 
     # begin
     while not rospy.is_shutdown():
         drone.publishImage()
-        # f1 = drone.moveToPosition()
+        f1 = drone.moveToPosition(droneTwist)
         # f2 = car.moveToPosition()
         # f1.join()
         # f2.join()
@@ -39,7 +43,10 @@ def main():
     return 0
 
 def droneTwistCallback(data):
-    rospy.loginfo(rospy.get_caller_id() + "I heard %s", data.data)
+    droneTwist = data.data
+
+def carTwistCallback(data):
+    carTwist = data.data
 
 
 if __name__ == '__main__':
