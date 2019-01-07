@@ -78,19 +78,35 @@ class AirsimDrone():
         else:
             return self.client.moveByVelocityAsync(vx, vy, vz, 1, self.name)
 
+    def moveByVelocity(self, pos_msg, cur_pos=False):
+        return None
+
 class AirSimCar():
-    def __init__(self):
-        self.client = airsim.MultirotorClient()
+    def __init__(self, name="Car1"):
+        self.client = airsim.CarClient()
         self.client.confirmConnection()
-        self.client.enableApiControl(True, "Drone1")
-        self.client.enableApiControl(True, "Drone2")
+        self.client.enableApiControl(True, name)
         self.client.armDisarm(True)
+
+        self.name = name
+        self.image_pub = rospy.Publisher("/%s/output/image_raw/compressed" % self.name, CompressedImage)
 
     def moveToPosition(self, pos_msg=""):
         self.client.enableApiControl(True, name)
         self.client.armDisarm(True, name)
         speed = 1 # vel.x + vel.y + vel.z^2 blah
         return self.client.moveToPositionAsync(0, 0, 0, speed, vehicle_name=name)
+
+    def publishImage(self, type="color"):
+        response_image = self.client.simGetImage(CAMERA_NAME, IMAGE_TYPE)
+        np_response_image = np.asarray(bytearray(response_image), dtype="uint8")
+        # Publish to ROS
+        msg = CompressedImage()
+        msg.header.stamp = rospy.Time.now()
+        msg.format = "jpeg"
+        msg.data = np_response_image.tostring()
+        # msg.data = np.array(cv2.imencode('.jpg', image_np)[1]).tostring()
+        self.image_pub.publish(msg)
 
 def parseSettings(json_loc):
     return {}

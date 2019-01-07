@@ -17,3 +17,8 @@ Headless mode/speeding up Images
  - https://github.com/Microsoft/AirSim/pull/850
  - https://github.com/Microsoft/AirSim/issues/796
  - https://answers.unrealengine.com/questions/796724/how-to-speed-up-the-engine-for-reinforcement-learn.html
+
+
+ GitHub Fork: https://blog.scottlowe.org/2015/01/27/using-fork-branch-git-workflow/
+
+ 2nd Environment (Linux): https://github.com/Microsoft/AirSim/issues/1552

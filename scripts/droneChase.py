@@ -6,7 +6,6 @@ import sys, select, termios, tty
 import airsim
 import math
 import random
-
 """
 In settings.json:
     "Drone2": {

@@ -1,5 +1,26 @@
 #!/usr/bin/env python
 
+'''
+CHANGE settings.json TO "SimMode": "Multirotor"
+
+
+,"Car1": {
+  "VehicleType": "PhysXCar",
+  "X": 8, "Y": 0, "Z": -2,
+"Yaw": 180
+}
+
+"Drone1": {
+"VehicleType": "SimpleFlight",
+"DefaultVehicleState": "Inactive",
+"RC": {
+"RemoteControlID": 0
+},
+"X": 4, "Y": 0, "Z": -2
+}
+
+'''
+
 import rospy
 
 from geometry_msgs.msg import Twist
@@ -7,6 +28,7 @@ from geometry_msgs.msg import Twist
 import sys, select, termios, tty
 import airsim
 import math
+import tf
 
 import signal
 
@@ -29,6 +51,14 @@ def drone_teleop():
 
     rospy.init_node('drone_teleop')
     pub = rospy.Publisher('/Drone1/cmd_vel', Twist, queue_size=10)
+    r = rospy.Rate(4) # 4hz
+
+    client = airsim.MultirotorClient()
+    client.confirmConnection()
+    client.enableApiControl(True, "Drone1")
+    client.armDisarm(True)
+    # Async methods returns Future. Call join() to wait for task to complete.
+    client.takeoffAsync().join()
 
     msg = """
     Control The Drone!
@@ -42,89 +72,86 @@ def drone_teleop():
     a    s    d
 
     q/z : increase/decrease max speeds by 10%
+    c/v : increase/decrease max yaw speed by 10%
     space key : stop
     """
     print(msg)
 
     speedBindings={
-    'q':(1.1,1.1),
-    'z':(.9,.9),
-    'x':(.9,1),
-    'e':(1,1.1),
-    'c':(1,.9),
+        'z':(1.1,1.1),
+        'x':(.9,.9)
+    }
+    turnBindings={
+        'c':(1.1,1.1),
+        'v':(.9,.9)
     }
 
-    speed = 1
-    turn = 1
-    x = 0
-    th = 0
-    status = 0
-    count = 0
-    acc = 0.1
-
-    z = 3
-    yaw = 0
+    speed = 2
+    turn = 20
 
     while not rospy.is_shutdown():
-        z = 0
-        yaw = 0
-        pitch = 0
-        roll = 0
+        curState = client.getMultirotorState(vehicle_name="Drone1")
+        newX = curX = curState.kinematics_estimated.position.x_val
+        newY = curY = curState.kinematics_estimated.position.y_val
+        newZ = curZ = curState.kinematics_estimated.position.z_val
+        leftYaw = rightYaw = False
+        # quaternion = (
+        #     curState.kinematics_estimated.orientation.x_val,
+        #     curState.kinematics_estimated.orientation.y_val,
+        #     curState.kinematics_estimated.orientation.z_val,
+        #     curState.kinematics_estimated.orientation.w_val)
+        # curEuler = tf.transformations.euler_from_quaternion(quaternion)
+        # newYaw = curYaw = curEuler[2]
+        curYawRate = 0
 
 
         key = getKey()
-        # if key in moveBindings.keys():
-        #     x = moveBindings[key][0]
-        #     th = moveBindings[key][1]
-        #     count = 0
         if key in speedBindings.keys():
             speed = speed * speedBindings[key][0]
+            print(vels(speed,turn))
+        elif key in turnBindings.keys():
             turn = turn * speedBindings[key][1]
-            count = 0
             print(vels(speed,turn))
         elif key == 'i':
-            pitch = 1
+            newX += speed
         elif key == 'k':
-            pitch = 1
+            newX -= speed
         elif key == 'j':
-            roll = -1
+            newY -= speed
         elif key == 'l':
-            roll = 1
+            newY += speed
         elif key == 'w':
-            z = -1
+            newZ -= speed
         elif key == "s":
-            z = 1
+            newZ += speed
         elif key == 'a':
-            yaw = -10
+            curYawRate = -turn
         elif key == "d":
-            yaw = 10
-        elif key == ' ' or key == 'k' :
-            # control_speed = 0
-            # control_turn = 0
-            print("Stopped")
-        else:
-            count = count + 1
-            if count > 4:
-                x = 0
-                th = 0
-            if (key == '\x03'):
-                break
+            curYawRate = turn
 
-        z_vel = z * speed
-        yaw_rate = yaw * turn
-        pitch_rate = pitch * turn
-        roll_rate = roll * turn
-        # client.moveByAngleThrottleAsync(pitch=pitch_rate, roll=roll_rate, throttle=z_vel, yaw_rate=yaw_rate, duration=1, vehicle_name = 'Drone1')
+        client.enableApiControl(True, "Drone1")
+        client.armDisarm(True, "Drone1")
+        f1 = client.moveByVelocityAsync(newX-curX, newY-curY, newZ-curZ, .25,
+                airsim.DrivetrainType.MaxDegreeOfFreedom,
+                yaw_mode=airsim.YawMode(is_rate=True, yaw_or_rate=curYawRate),
+                vehicle_name="Drone1")
+        # f1.join()
 
         twist = Twist()
-        twist.linear.x = 0; twist.linear.y = 0; twist.linear.z = 0
-        twist.angular.x = 0; twist.angular.y = 0; twist.angular.z = 0
+        # z_vel = z * speed
+        # yaw_rate = yaw * turn
+        # pitch_rate = pitch * turn
+        # roll_rate = roll * turn
+        # twist.linear.x = pitch_rate; twist.linear.y = pitch_rate; twist.linear.z = z_vel
+        # twist.angular.x = roll_rate; twist.angular.y = yaw_rate; twist.angular.z = pitch_rate
         pub.publish(twist)
 
-def signal_handler(signal, frame):
-	rospy.signal_shutdown("Stopping drone teleop")
-	termios.tcsetattr(sys.stdin, termios.TCSADRAIN, termios.tcgetattr(sys.stdin))
-	sys.exit(0)
+        print("\n\n\n\n")
+        print(curState.kinematics_estimated.linear_acceleration.x_val)
+        print(curState.kinematics_estimated.linear_acceleration.y_val)
+        print(curState.kinematics_estimated.linear_acceleration.z_val)
+
+        r.sleep()
 
 
 if __name__ == '__main__':
