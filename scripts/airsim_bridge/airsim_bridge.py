@@ -1,5 +1,25 @@
 #!/usr/bin/env python
 
+# Use below in settings.json
+"""
+{
+    ...
+    "Vehicles": {
+        "Drone1": {
+          "VehicleType": "SimpleFlight",
+          "X": 0, "Y": 0, "Z": -5,
+          "Yaw": 90
+        }
+        "Car1": {
+          "VehicleType": "PhysXCar",
+          "X": 0, "Y": 0, "Z": -2
+        }
+    },
+    "CommandMode": "Velocity" for velocity based movement, "Position" for position based movement
+}
+
+"""
+
 import sys, select, termios, tty
 import math
 import signal
@@ -15,19 +35,21 @@ carTwist = Twist()
 def main():
     # get airsim settings
     settings = airsim_objects.parseSettings("/home/tetsuo/Documents/AirSim/settings.json")
-    settings["drone_name"] = "Drone1"
-    settings["car_name"] = "Car1"
+    com_mode = settings["CommandMode"]
+    drone_name = "Drone1" #settings["drone_name"] =
+    car_name = "Car1" #settings["car_name"] =
 
     # setup ROS node
     rospy.init_node('airsim_bridge')
-    # rospy.Subscriber("/%s/cmd_vel" % settings["drone_name"], Twist, droneTwistCallback)# use lambda function instead of callback
-    rospy.Subscriber("/%s/cmd_vel" % settings["car_name"], Twist, carTwistCallback) # use lambda function instead of callback
+    # rospy.Subscriber("/%s/cmd_vel" % settings["drone_name"], Twist, droneTwistCallback)
+    rospy.Subscriber("/%s/cmd_vel" % car_name, Twist, carTwistCallback)
+    r = rospy.Rate(4) # 4hz
 
     # setup vehicles
-    drone = airsim_objects.AirsimDrone(settings["drone_name"])
+    drone = airsim_objects.AirsimDrone(drone_name)
     drone.beginMovement().join()
-    droneTwist.linear.x = 0; droneTwist.linear.y = 0; droneTwist.linear.z = 0
-    droneTwist.angular.x = 0; droneTwist.angular.y = 0; droneTwist.angular.z = 0
+    # droneTwist.linear.x = 0; droneTwist.linear.y = 0; droneTwist.linear.z = 0
+    # droneTwist.angular.x = 0; droneTwist.angular.y = 0; droneTwist.angular.z = 0
     # car = airsim_objects.AirSimCar(settings["car_name"])
     # carTwist.linear.x = 0; carTwist.linear.y = 0; carTwist.linear.z = 0
     # carTwist.angular.x = 0; carTwist.angular.y = 0; carTwist.angular.z = 0
@@ -36,12 +58,15 @@ def main():
     while not rospy.is_shutdown():
         # drone.publishImage()
         # car.publishImage()
+
         # f1 = drone.moveToPosition(droneTwist)
         # f2 = car.moveToPosition()
+        f1 = drone.moveByVelocity(droneTwist)
+
         # f1.join()
         # f2.join()
 
-        rospy.sleep(1)
+        r.sleep()
 
     return 0
 

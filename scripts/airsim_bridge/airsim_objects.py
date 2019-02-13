@@ -3,6 +3,7 @@
 import sys, select, termios, tty
 import math
 import signal
+import json
 # sys.path.remove('/opt/ros/kinetic/lib/python2.7/dist-packages')
 # import cv2
 import numpy as np
@@ -34,9 +35,9 @@ class AirsimDrone():
         self.image_pub = rospy.Publisher("/%s/output/image_raw/compressed" % self.name, CompressedImage)
 
     def beginMovement(self):
-        self.client.enableApiControl(True, name)
-        self.client.armDisarm(True, name)
-        return client.takeoffAsync(vehicle_name=name)
+        self.client.enableApiControl(True, self.name)
+        self.client.armDisarm(True, self.name)
+        return self.client.takeoffAsync(vehicle_name=self.name)
 
     def publishImage(self, type="color"):
         response_image = self.client.simGetImage(CAMERA_NAME, IMAGE_TYPE)
@@ -78,8 +79,13 @@ class AirsimDrone():
         else:
             return self.client.moveByVelocityAsync(vx, vy, vz, 1, self.name)
 
-    def moveByVelocity(self, pos_msg, cur_pos=False):
-        return None
+    def moveByVelocity(self, pos_msg):
+        self.client.enableApiControl(True, self.name)
+        self.client.armDisarm(True, self.name)
+        f1 = self.client.moveByVelocityAsync(pos_msg.linear.x, pos_msg.linear.y, pos_msg.linear.z, .25,
+                airsim.DrivetrainType.MaxDegreeOfFreedom,
+                yaw_mode=airsim.YawMode(is_rate=True, yaw_or_rate=pos_msg.angular.x),
+                vehicle_name=self.name)
 
 class AirSimCar():
     def __init__(self, name="Car1"):
@@ -109,4 +115,7 @@ class AirSimCar():
         self.image_pub.publish(msg)
 
 def parseSettings(json_loc):
-    return {}
+    with open(json_loc) as json_file:
+        data = json.load(json_file)
+        return data
+    return None

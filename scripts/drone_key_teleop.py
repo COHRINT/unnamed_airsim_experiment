@@ -57,17 +57,17 @@ def drone_teleop():
     client.confirmConnection()
     client.enableApiControl(True, "Drone1")
     client.armDisarm(True)
-    # Async methods returns Future. Call join() to wait for task to complete.
-    client.takeoffAsync().join()
+    # # Async methods returns Future. Call join() to wait for task to complete.
+    # client.takeoffAsync().join()
 
     msg = """
     Control The Drone!
     ---------------------------
-    Pitch/Roll:
+    X/Y Plane Movement:
          i
     j    k    l
 
-    Throttle/Yaw:
+    Z Plane/Yaw:
          w
     a    s    d
 
@@ -90,6 +90,7 @@ def drone_teleop():
     turn = 20
 
     while not rospy.is_shutdown():
+        droneTwist = Twist()
         curState = client.getMultirotorState(vehicle_name="Drone1")
         newX = curX = curState.kinematics_estimated.position.x_val
         newY = curY = curState.kinematics_estimated.position.y_val
@@ -114,20 +115,28 @@ def drone_teleop():
             print(vels(speed,turn))
         elif key == 'i':
             newX += speed
+            droneTwist.linear.x = speed
         elif key == 'k':
             newX -= speed
+            droneTwist.linear.x = -speed
         elif key == 'j':
             newY -= speed
+            droneTwist.linear.y = -speed
         elif key == 'l':
             newY += speed
+            droneTwist.linear.y = speed
         elif key == 'w':
             newZ -= speed
+            droneTwist.linear.z = -speed
         elif key == "s":
             newZ += speed
+            droneTwist.linear.z = speed
         elif key == 'a':
             curYawRate = -turn
+            droneTwist.angular.x = -turn
         elif key == "d":
             curYawRate = turn
+            droneTwist.angular.x = turn
 
         client.enableApiControl(True, "Drone1")
         client.armDisarm(True, "Drone1")
@@ -137,19 +146,19 @@ def drone_teleop():
                 vehicle_name="Drone1")
         # f1.join()
 
-        twist = Twist()
+
         # z_vel = z * speed
         # yaw_rate = yaw * turn
         # pitch_rate = pitch * turn
         # roll_rate = roll * turn
         # twist.linear.x = pitch_rate; twist.linear.y = pitch_rate; twist.linear.z = z_vel
         # twist.angular.x = roll_rate; twist.angular.y = yaw_rate; twist.angular.z = pitch_rate
-        pub.publish(twist)
+        pub.publish(droneTwist)
 
-        print("\n\n\n\n")
-        print(curState.kinematics_estimated.linear_acceleration.x_val)
-        print(curState.kinematics_estimated.linear_acceleration.y_val)
-        print(curState.kinematics_estimated.linear_acceleration.z_val)
+        # print("\n\n\n\n")
+        # print(curState.kinematics_estimated.linear_acceleration.x_val)
+        # print(curState.kinematics_estimated.linear_acceleration.y_val)
+        # print(curState.kinematics_estimated.linear_acceleration.z_val)
 
         r.sleep()
 
