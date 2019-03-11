@@ -23,7 +23,9 @@ CHANGE settings.json TO "SimMode": "Multirotor"
 
 import rospy
 
-from geometry_msgs.msg import Twist
+# from geometry_msgs.msg import Twist, PoseStamped, Point, Quaternion
+import geometry_msgs.msg as geo_msgs
+import std_msgs.msg as std_msgs
 
 import sys, select, termios, tty
 import airsim
@@ -32,51 +34,40 @@ import tf
 
 import signal
 
-def getKey():
-   tty.setraw(sys.stdin.fileno())
-   rlist, _, _ = select.select([sys.stdin], [], [], 0.1)
-   if rlist:
-       key = sys.stdin.read(1)
-   else:
-       key = ''
 
-   termios.tcsetattr(sys.stdin, termios.TCSADRAIN, termios.tcgetattr(sys.stdin))
-   return key
+def pos_move():
 
-
-def vels(speed,turn):
-   return "currently:\tspeed %s\tturn %s " % (speed,turn)
-
-def drone_teleop():
-
-    rospy.init_node('drone_teleop')
-    pub = rospy.Publisher('/Drone1/', Twist, queue_size=10)
+    rospy.init_node('position_movement_test')
+    pub = rospy.Publisher('/Drone1/pose', geo_msgs.PoseStamped, queue_size=10)
     r = rospy.Rate(4) # 4hz
 
-    client = airsim.MultirotorClient()
-    client.confirmConnection()
-    client.enableApiControl(True, "Drone1")
-    client.armDisarm(True)
+    # client = airsim.MultirotorClient()
+    # client.confirmConnection()
+    # client.enableApiControl(True, "Drone1")
+    # client.armDisarm(True)
     # # Async methods returns Future. Call join() to wait for task to complete.
     # client.takeoffAsync().join()
-
+    # x = 10
+    # y = 10
+    # z = 15
+    #
+    # print("goin")
+    # f1 = client.moveToPositionAsync(x, y, -1*z, 1, timeout_sec=25,
+    #             drivetrain=airsim.DrivetrainType.MaxDegreeOfFreedom,
+    #             yaw_mode=airsim.YawMode(is_rate=False, yaw_or_rate=0),
+    #             vehicle_name="Drone1")
+    #
+    # f1.join()
+    # print("showed")
 
     while not rospy.is_shutdown():
-        droneTwist = Twist()
-        curState = client.getMultirotorState(vehicle_name="Drone1")
-
-
-
-        # client.enableApiControl(True, "Drone1")
-        # client.armDisarm(True, "Drone1")
-        # f1 = client.moveByVelocityAsync(newX-curX, newY-curY, newZ-curZ, .25,
-        #         airsim.DrivetrainType.MaxDegreeOfFreedom,
-        #         yaw_mode=airsim.YawMode(is_rate=True, yaw_or_rate=curYawRate),
-        #         vehicle_name="Drone1")
-
-        pub.publish(droneTwist)
-
-
+        x = raw_input("x: ")
+        y = raw_input("y: ")
+        z = raw_input("z: ")
+        pt = geo_msgs.Point(float(x), float(y), -1*float(z))
+        qt = geo_msgs.Quaternion(0, 0, 0, 0) # xyzw
+        nextPose = geo_msgs.PoseStamped(std_msgs.Header(), geo_msgs.Pose(pt, qt))
+        pub.publish(nextPose)
         r.sleep()
 
 
