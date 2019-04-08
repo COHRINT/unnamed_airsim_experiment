@@ -28,7 +28,7 @@ import geometry_msgs.msg as geo_msgs
 import std_msgs.msg as std_msgs
 
 import sys, select, termios, tty
-import airsim
+# import airsim
 import math
 import tf
 
