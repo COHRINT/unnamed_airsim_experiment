@@ -66,8 +66,10 @@ def pos_move():
         z = raw_input("z: ")
         pt = geo_msgs.Point(float(x), float(y), -1*float(z))
         qt = geo_msgs.Quaternion(0, 0, 0, 0) # xyzw
+        print("sending pose: (%d, %d, %d", x, y, z)
         nextPose = geo_msgs.PoseStamped(std_msgs.Header(), geo_msgs.Pose(pt, qt))
         pub.publish(nextPose)
+        print("Published")
         r.sleep()
 
 

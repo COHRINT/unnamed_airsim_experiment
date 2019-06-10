@@ -7,7 +7,6 @@ import airsim_bridge
 from airsim_bridge.srv import *
 import threading
 
-from unrealcv import client
 import unrealcv
 def main():
     # set_location_service = rospy.ServiceProxy('set_camera_location', SetCameraLocation)
@@ -27,7 +26,9 @@ def main():
 
 
     # host = unrealcv.HOST
-    # port = unrealcv.PORT
+    #port = unrealcv.PORT
+
+    # from unrealcv import client
 
     opencv_bridge = cv_bridge.CvBridge()
 
@@ -35,14 +36,28 @@ def main():
     # client = unrealcv.Client(endpoint=(host, port))
     client = unrealcv.Client(('127.0.0.1', 9234))# '127.0.0.1' is the server IP address, 9001 is the server port ID, please change it to align to your UnrealCV server.
 
+    # import unrealcv
+    # client = unrealcv.Client(('127.0.0.1', 9001))# '127.0.0.1' is the server IP address, 9001 is the server port ID, please change it to align to your UnrealCV server.
     client.connect()
     # if not client.isconnected(): # Check if the connection is successfully established
     #   print('UnrealCV server is not running. Run the game from http://unrealcv.github.io first.')
     # else:
+    # print("Hello")
+    res = client.request('vget /unrealcv/status')
+    print(res)
+    print("end")
     filename = client.request('vget /camera/0/lit')
     print(filename)
 
     filename = client.request('vget /camera/0/depth depth.exr')
+    print(filename)
+
+    loc = client.request('vget /camera/0/location')
+    print(loc)
+
+    client.request('vset /camera/1/location [6600] [5600] [743]')
+    filename = client.request('vget /camera/1/lit')
+    print(filename)
 
     # It is also possible to get the png directly without saving to a file
     # res = client.request('vget /camera/0/lit png')
